@@ -1,10 +1,9 @@
 import requests
 import time
 import traceback
-import json
 import os
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 
 def log_error(message, exception=None, log_file="delete_errors.log"):
     with open(log_file, "a") as log:
@@ -27,16 +26,6 @@ def delete_activity(webhook_url, activity_id):
         print(f"❌ Failed to delete ID: {activity_id}")
         return False
 
-def fetch_activity(webhook_url, activity_id):
-    try:
-        get_endpoint = webhook_url.rstrip("/") + "/crm.activity.get"
-        response = requests.post(get_endpoint, json={"id": activity_id})
-        data = response.json()
-        return data.get("result", {})
-    except Exception as e:
-        log_error(f"Failed to fetch activity ID: {activity_id}", e)
-        return {}
-
 def choose_file_dialog():
     root = tk.Tk()
     root.withdraw()
@@ -48,8 +37,8 @@ def choose_file_dialog():
 
 def main():
     print("⚠️ WARNING: This operation will permanently delete CRM activities in Bitrix24.")
-    print("Make sure the input file is correct and matches your intention.")
-    print("❗ If misused, it can cause irreversible data loss.")
+    print("Make sure the input file is correct and that all IDs are safe to delete.")
+    print("❗ This can result in irreversible data loss if used incorrectly.")
     confirm = input("Type 'Yes' to continue: ")
     if confirm.strip().lower() != "yes":
         print("🛑 Aborted by user.")
@@ -62,8 +51,6 @@ def main():
         print("🛑 No file selected. Exiting.")
         return
 
-    subject_to_match = input("🔍 Enter the exact SUBJECT text to match: ").strip()
-
     if not os.path.isfile(file_path):
         print(f"❌ File not found: {file_path}")
         return
@@ -72,7 +59,7 @@ def main():
         import pandas as pd
         try:
             df = pd.read_excel(file_path)
-            activity_ids = df.iloc[:, 0].dropna().astype(int).tolist()
+            activity_ids = df.iloc[:, 0].dropna().astype(int).astype(str).tolist()
         except Exception as e:
             print("❌ Failed to read Excel file.")
             log_error("Failed to read Excel file", e)
@@ -81,21 +68,13 @@ def main():
         with open(file_path, "r") as file:
             activity_ids = [line.strip() for line in file if line.strip().isdigit()]
 
-    print(f"\n🚀 Loaded {len(activity_ids)} IDs. Checking SUBJECT and deleting matches...\n")
+    print(f"\n🚀 Loaded {len(activity_ids)} IDs. Starting deletion process...\n")
 
     deleted_count = 0
     for activity_id in activity_ids:
-        activity = fetch_activity(webhook_url, activity_id)
-        if not activity:
-            continue
-        subject = activity.get("SUBJECT", "")
-        if subject.strip().lower() == subject_to_match.strip().lower():
-            success = delete_activity(webhook_url, activity_id)
-            if success:
-                deleted_count += 1
-        else:
-            print(f"⏭️ Skipped ID {activity_id} (SUBJECT: '{subject}')")
-
+        success = delete_activity(webhook_url, activity_id)
+        if success:
+            deleted_count += 1
         time.sleep(0.4)
 
     print(f"\n✅ Finished. Total activities deleted: {deleted_count} out of {len(activity_ids)}.")
