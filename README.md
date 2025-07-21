@@ -13,7 +13,7 @@ This Python script allows you to safely and selectively delete CRM activities fr
 - Deletes Bitrix24 CRM activities via REST API using a webhook
 - Filters deletions by exact `SUBJECT` match
 - Accepts TXT or Excel files with a list of activity IDs
-- Error handling with logs saved to `ligara_delete_errors.log`
+- Error handling with logs saved to `delete_errors.log`
 - Simple GUI file picker using `tkinter`
 
 ---
@@ -83,7 +83,7 @@ Excel:
 Errors and failed deletions will be recorded in:
 
 ```
-ligara_delete_errors.log
+delete_errors.log
 ```
 
 ---
