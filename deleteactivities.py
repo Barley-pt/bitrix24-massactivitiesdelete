@@ -6,7 +6,7 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-def log_error(message, exception=None, log_file="ligara_delete_errors.log"):
+def log_error(message, exception=None, log_file="delete_errors.log"):
     with open(log_file, "a") as log:
         log.write("ERROR: " + message + "\n")
         if exception:
